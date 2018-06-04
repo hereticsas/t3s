@@ -3,6 +3,7 @@ from flask_restful import Resource, Api
 
 import tensorflow as tf
 import os
+import sys
 import numpy as np
 import json
 
@@ -21,11 +22,39 @@ api = Api(app)
 
 class T3S(Resource):
 
-    def get(self, data_input):
-        # data_input = '{"lp_length":10, "lp_alpha":9, "lp_num":0, "lp_other":1, "domain_length":9,"domain":"gmx.com"}'
-        parsed_json = json.loads(data_input)
-        for key, value in parsed_json.items():
-          parsed_json[key] = [value]
+    def get(self, input):
+        """
+        Processes the given input to predict a result from the TensorFlow model.
+
+        Args:
+            input: String to process.
+                If the T3S is configured with a features extraction file, it should be a
+                string in the right format for the extract() function defined in this
+                file.
+                Otherwise, it must be a JSON-formatted string with the features of the
+                model as keys, and the pre-computed features values.
+
+        Returns:
+            A dictionary that contains the prediction results.
+        """
+        # if no features extraction file is given, expect direct JSON data
+        if not config.TF_USE_EXTRACTOR:
+            try:
+                parsed_json = json.loads(input)
+            except json.decoder.JSONDecodeError:
+                return {
+                    'response': '"%s" is not valid data. Please enter JSON-formatted data to represent your features.' % (input)
+                }
+            for key, value in parsed_json.items():
+                parsed_json[key] = [value]
+        # else expect a string and extract features with the extracting file
+        else:
+            parsed_json = extractor.extract(input)
+            if parsed_json is None:
+                return {
+                    'response': '"%s" is not valid data. Please enter an email in the form: "username@domain".' % (input)
+                }
+
         model_input = T3S.preprocess_input_examples_arg_string('examples=['+json.dumps(parsed_json)+']')
         feature_chance = T3S.run_saved_model_with_feed_dict(config.TF_MODEL_DIR, "serve", "predict", model_input,'./',True)
         json_result = {'feature_chance': np.float64(feature_chance)}
@@ -39,13 +68,14 @@ class T3S(Resource):
       Runs the input dictionary through the MetaGraphDef within a SavedModel
       specified by the given tag_set and SignatureDef. Also save the outputs to file
       if outdir is not None.
+
       Args:
         saved_model_dir: Directory containing the SavedModel to execute.
         tag_set: Group of tag(s) of the MetaGraphDef with the SignatureDef map, in
             string format, separated by ','. For tag-set contains multiple tags, all
             tags must be passed in.
         signature_def_key: A SignatureDef key string.
-        input_tensor_key_feed_dict: A dictionary maps input keys to numpy ndarrays.
+        input_tensor_key_feed_dict: A dictionary that maps input keys to numpy ndarrays.
         outdir: A directory to save the outputs to. If the directory doesn't exist,
             it will be created.
         overwrite_flag: A boolean flag to allow overwrite output file if file with
@@ -53,14 +83,15 @@ class T3S(Resource):
         tf_debug: A boolean flag to use TensorFlow Debugger (TFDBG) to observe the
             intermediate Tensor values and runtime GraphDefs while running the
             SavedModel.
+
       Raises:
         ValueError: When any of the input tensor keys is not valid.
         RuntimeError: An error when output file already exists and overwrite is not
-        enabled.
+            enabled.
       """
       result_string = ''
       # Get a list of output tensor names.
-      meta_graph_def = saved_model_utils.get_meta_graph_def(saved_model_dir,tag_set)
+      meta_graph_def = saved_model_utils.get_meta_graph_def(saved_model_dir, tag_set)
 
       # Re-create feed_dict based on input tensor name instead of key as session.run
       # uses tensor name.
@@ -124,10 +155,12 @@ class T3S(Resource):
       """Gets TensorInfo for all inputs of the SignatureDef.
       Returns a dictionary that maps each input key to its TensorInfo for the given
       signature_def_key in the meta_graph_def
+
       Args:
         meta_graph_def: MetaGraphDef protocol buffer with the SignatureDef map to
             look up SignatureDef key.
         signature_def_key: A SignatureDef key string.
+
       Returns:
         A dictionary that maps input tensor keys to TensorInfos.
       """
@@ -140,10 +173,12 @@ class T3S(Resource):
       """Gets TensorInfos for all outputs of the SignatureDef.
       Returns a dictionary that maps each output key to its TensorInfo for the given
       signature_def_key in the meta_graph_def.
+
       Args:
         meta_graph_def: MetaGraphDef protocol buffer with the SignatureDefmap to
         look up signature_def_key.
         signature_def_key: A SignatureDef key string.
+
       Returns:
         A dictionary that maps output tensor keys to TensorInfos.
       """
@@ -156,16 +191,19 @@ class T3S(Resource):
         Parses input string in the format of 'input_key1=[{feature_name:
         feature_list}];input_key2=[{feature_name:feature_list}];' into a dictionary
         that maps each input_key to its list of serialized tf.Example.
+
         Args:
-        input_examples_str: A string that specifies a list of dictionaries of
-        feature_names and their feature_lists for each input.
-        Each input is separated by semicolon. For each input key:
-        'input=[{feature_name1: feature_list1, feature_name2:feature_list2}]'
-        items in feature_list can be the type of float, int, long or str.
+            input_examples_str: A string that specifies a list of dictionaries of
+            feature_names and their feature_lists for each input.
+            Each input is separated by semicolon. For each input key:
+                'input=[{feature_name1: feature_list1, feature_name2:feature_list2}]'
+            items in feature_list can be the type of float, int, long or str.
+
         Returns:
-        A dictionary that maps input keys to lists of serialized tf.Example.
+            A dictionary that maps input keys to lists of serialized tf.Example.
+
         Raises:
-        ValueError: An error when the given tf.Example is not a list.
+            ValueError: An error when the given tf.Example is not a list.
         """
         input_dict = T3S.preprocess_input_exprs_arg_string(input_examples_str)
         for input_key, example_list in input_dict.items():
@@ -183,10 +221,11 @@ class T3S(Resource):
       """Parses input arg into dictionary that maps input key to python expression.
       Parses input string in the format of 'input_key=<python expression>' into a
       dictionary that maps each input_key to its python expression.
+
       Args:
         input_exprs_str: A string that specifies python expression for input keys.
-        Each input is separated by semicolon. For each input key:
-            'input_key=<python expression>'
+            Each input is separated by semicolon. For each input key:
+                'input_key=<python expression>'
       Returns:
         A dictionary that maps input keys to their values.
       Raises:
@@ -234,8 +273,30 @@ class T3S(Resource):
               (type(feature_list[0]), feature_list[0]))
       return example.SerializeToString()
 
-api.add_resource(T3S, '/<string:data_input>')
+    @staticmethod
+    def error(message):
+        print('-' * 24)
+        print('T3S configuration error:')
+        print('-' * 24)
+        print(message)
+
+@app.route('/favicon.ico')
+def favicon():
+    return ''
+
+api.add_resource(T3S, '/<string:input>')
 
 if __name__ == '__main__':
     config.configure_app(app)
+    if config.TF_USE_EXTRACTOR:
+        try:
+            import tf.extractor as extractor
+        except ImportError as e:
+            T3S.error('Cannot import features extracting file, but you have specified '
+                'you want to use in your config.py file. Either:\n'
+                '- change the TF_USE_EXTRACTOR variable to false in the config.py file\n'
+                '- or make sure you have saved your features extracting file under "tf/extractor.py"!'
+            )
+            sys.exit(1)
+
     app.run()

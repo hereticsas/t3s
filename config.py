@@ -1,5 +1,13 @@
 """
 T3S configuration file.
+
+Edit it to suit your needs:
+    1. set the `${SERVER_NAME}` to the address and port of your API in the form:
+    `{@server:port}` (e.g. `127.0.0.1:5000`)
+    2. choose your server configuration: `default`, `dev`, `testing` or
+    `production` and set it in the `configure_app()` function
+    3. configure your TensorFlow model by setting the `${TF_MODEL_DIR}`
+    directory and, if necessary, specifying you have a features extraction file
 """
 
 import os
@@ -42,3 +50,4 @@ def configure_app(app):
 # TENSORFLOW CONFIGURATION
 # ========================
 TF_MODEL_DIR = '/tmp/email_predictor_model/1528091811/'
+TF_USE_EXTRACTOR = True
