@@ -42,7 +42,7 @@ class T3S(Resource):
         Returns:
             A dictionary that contains the prediction results.
         """
-        # Split examples
+        # Split examples and prepare JSON dictionaries
         # If no features extraction file is given, expect direct JSON data
         if not config.TF_USE_EXTRACTOR:
             try:
@@ -62,15 +62,15 @@ class T3S(Resource):
         json_result = {}
         # Foreach example in the list:
         for i, parsed_json in enumerate(inputs):
-            for key, value in parsed_json.items():
-                parsed_json[key] = [value]
+            # for key, value in parsed_json.items():
+            #     parsed_json[key] = [value]
 
             # Pass example in TensorFlow formatting
             model_input = T3S.preprocess_input_examples_arg_string('examples=['+json.dumps(parsed_json)+']')
             # Comput model prediction
             feature_chance = T3S.run_saved_model_with_feed_dict(config.TF_MODEL_DIR, "serve", "predict", model_input, './', True)
             # Add result to list
-            json_result['ex' + str(i) + '-feature_chance'] = np.float64(feature_chance)
+            json_result['ex' + str(i) + '-res'] = np.float64(feature_chance)
 
         # Return result
         return json_result
@@ -271,31 +271,41 @@ class T3S(Resource):
       Returns:
         A byte-string to represent the serialized example data.
       """
-      example = example_pb2.Example()
-      for feature_name, feature_list in example_dict.items():
-        if not isinstance(feature_list, list):
-          raise ValueError('feature value must be a list, but %s: "%s" is %s' %
-                           (feature_name, feature_list, type(feature_list)))
-        if isinstance(feature_list[0], float):
-          example.features.feature[feature_name].float_list.value.extend(
-              feature_list)
-        elif isinstance(feature_list[0], str):
-          for i in range(len(feature_list)):
-            feature_list[i] = feature_list[i].encode()
-          example.features.feature[feature_name].bytes_list.value.extend(
-              feature_list)
-        elif isinstance(feature_list[0], int):
-          example.features.feature[feature_name].int64_list.value.extend(
-              feature_list)
-        elif isinstance(feature_list[0], bytes):
-          example.features.feature[feature_name].bytes_list.value.extend(
-              feature_list)
+      # Cast features in TensorFlow types
+      features = {}
+      for f_name, f_val in example_dict.items():
+          features[f_name] = T3S._cast_feature(f_val)
 
-        else:
-          raise ValueError(
-              'Type %s for value %s is not supported for tf.train.Feature.' %
-              (type(feature_list[0]), feature_list[0]))
+      # Create an example protocol buffer
+      example = tf.train.Example(features=tf.train.Features(feature=features))
+      # Serialize to string
       return example.SerializeToString()
+
+    @staticmethod
+    def _cast_feature(value):
+        if isinstance(value, float):
+            return T3S._float_feature(value)
+        elif isinstance(value, str):
+            return T3S._bytes_feature(tf.compat.as_bytes(value))
+        elif isinstance(value, int):
+            return T3S._int64_feature(value)
+        elif isinstance(value, bytes):
+            return T3S._bytes_feature(value)
+        else:
+            raise ValueError(
+                'Type %s for value %s is not supported for tf.train.Feature.' %
+                (type(value), value)
+            )
+
+    @staticmethod
+    def _float_feature(value):
+        return tf.train.Feature(float_list=tf.train.FloatList(value=[value]))
+    @staticmethod
+    def _int64_feature(value):
+        return tf.train.Feature(int64_list=tf.train.Int64List(value=[value]))
+    @staticmethod
+    def _bytes_feature(value):
+        return tf.train.Feature(bytes_list=tf.train.BytesList(value=[value]))
 
     @staticmethod
     def error(message):
