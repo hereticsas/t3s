@@ -13,21 +13,22 @@ from tensorflow.python.client import session
 from tensorflow.python.framework import ops as ops_lib
 from tensorflow.python.saved_model import loader
 
+import config
+
 app = Flask(__name__)
 api = Api(app)
-dir_model = 'tf/models/official/wide_deep/email_predictor_model/1527447753'
 
 
 class T3S(Resource):
 
-    def get(self,data_input):
-        #data_input = '{"lp_length":10, "lp_alpha":9, "lp_num":0, "lp_other":1, "domain_length":9,"domain":"gmx.com"}'
+    def get(self, data_input):
+        # data_input = '{"lp_length":10, "lp_alpha":9, "lp_num":0, "lp_other":1, "domain_length":9,"domain":"gmx.com"}'
         parsed_json = json.loads(data_input)
         for key, value in parsed_json.items():
           parsed_json[key] = [value]
         model_input = T3S.preprocess_input_examples_arg_string('examples=['+json.dumps(parsed_json)+']')
-        feature_chance = T3S.run_saved_model_with_feed_dict(dir_model, "serve", "predict", model_input,'./',True)
-        json_result = {'feature_chance':np.float64(feature_chance) }  
+        feature_chance = T3S.run_saved_model_with_feed_dict(config.TF_MODEL_DIR, "serve", "predict", model_input,'./',True)
+        json_result = {'feature_chance': np.float64(feature_chance)}
         return json_result
 
 
@@ -147,7 +148,7 @@ class T3S(Resource):
         A dictionary that maps output tensor keys to TensorInfos.
       """
       return signature_def_utils.get_signature_def_by_key(meta_graph_def,
-                                                          signature_def_key).outputs      
+                                                          signature_def_key).outputs
 
     @staticmethod
     def preprocess_input_examples_arg_string(input_examples_str):
@@ -233,8 +234,8 @@ class T3S(Resource):
               (type(feature_list[0]), feature_list[0]))
       return example.SerializeToString()
 
-
 api.add_resource(T3S, '/<string:data_input>')
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    config.configure_app(app)
+    app.run()
