@@ -7,7 +7,7 @@ With this API, you can pass one or multiple examples to your model at once.
 It was originally conceived for email analysis, this is why most examples refer to this type of data.
 
 ### Configuring the server
-First make sure you have a model saved somewhere in a `${TF_MODEL_DIR}` directory. To learn how to prepare and export a model, you can check out the [TensorFlow reference â€˜Wide and Deepâ€™ model tutorial](https://www.tensorflow.org/tutorials/wide_and_deep).
+First make sure you have a model saved somewhere in a `${TF_MODEL_DIR}` directory. To learn how to prepare and export a model, you can check out the [TensorFlow reference ‘Wide and Deep’ model tutorial](https://www.tensorflow.org/tutorials/wide_and_deep).
 
 Then, edit the `config.py` file to suit your needs:
 1. set the `${SERVER_NAME}` to the address and port of your API in the form: `{@server:port}` (e.g. `127.0.0.1:5000`)
@@ -35,6 +35,7 @@ in the JSON format or as a string.
 Broadly speaking, you will access an address in the form: `${SERVER_NAME}/data_input`.
 
 For now, `data_input` can be given in two forms:
+
 - a JSON-formatted string that holds the **pre-computed features values** of your examples in an array of JSON dictionaries
 (e.g. `[{"lp_length": 7, "domain": "ex.com"},{"lp_length": 4, "domain": "ex2.com"}]`)
 - a string (with the examples separated by the ``;`` character) to extract the features from thanks to your **specific extracting file**
