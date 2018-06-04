@@ -12,7 +12,7 @@ For now, input data can be given in two forms:
 - a JSON-formatted string that holds the **pre-computed features values** of your example
 (e.g. *{"lp_length": 7, "domain": "ex.com"}*)
 - a string to extract the features from thanks to your **specific extracting file**
-(e.g. *example&#64;ex.com*)
+(e.g. *example@ex.com*)
 
 The **specific extracting file** must be saved as `tf/extractor.py` in your T3S folder. It has to implement an `extract()`
 function that returns a Python dictionary with each of your model features as keys and the matching values for your example.
@@ -46,6 +46,6 @@ For example, you can access the page:
 
 or
 
-*127.0.0.1:5000/example&#64;ex.com*
+*127.0.0.1:5000/example@ex.com*
 
 depending on your configuration file: this page will print out the prediction result of your model.
