@@ -62,9 +62,6 @@ class T3S(Resource):
         json_result = {}
         # Foreach example in the list:
         for i, parsed_json in enumerate(inputs):
-            # for key, value in parsed_json.items():
-            #     parsed_json[key] = [value]
-
             # Pass example in TensorFlow formatting
             model_input = T3S.preprocess_input_examples_arg_string('examples=['+json.dumps(parsed_json)+']')
             # Comput model prediction
@@ -283,6 +280,16 @@ class T3S(Resource):
 
     @staticmethod
     def _cast_feature(value):
+        """
+        Casts a value to a TensorFlow type depending on its Python type.
+
+        Args:
+            value: Value to cast.
+                Can be: float, str, int or bytes.
+
+        Returns:
+            A tf.train.Feature with matching type.
+        """
         if isinstance(value, float):
             return T3S._float_feature(value)
         elif isinstance(value, str):
@@ -299,16 +306,44 @@ class T3S(Resource):
 
     @staticmethod
     def _float_feature(value):
+        """
+        Casts a value to a TensorFlow Float type (and transforms it into a list).
+        Args:
+            value: Float value to cast.
+        Returns:
+            A tf.train.Feature with matching Float type.
+        """
         return tf.train.Feature(float_list=tf.train.FloatList(value=[value]))
     @staticmethod
     def _int64_feature(value):
+        """
+        Casts a value to a TensorFlow Int type (and transforms it into a list).
+        Args:
+            value: Int value to cast.
+        Returns:
+            A tf.train.Feature with matching Int type.
+        """
         return tf.train.Feature(int64_list=tf.train.Int64List(value=[value]))
     @staticmethod
     def _bytes_feature(value):
+        """
+        Casts a value to a TensorFlow Bytes type (and transforms it into a list).
+        Args:
+            value: Bytes value to cast.
+        Returns:
+            A tf.train.Feature with matching Bytes type.
+        """
         return tf.train.Feature(bytes_list=tf.train.BytesList(value=[value]))
 
     @staticmethod
     def error(message):
+        """
+        Outputs an error message related to T3S configuration (with a header to
+        distinguish from common Python exceptions).
+
+        Args:
+            message: String with the message to display.
+        """
         print('-' * 24)
         print('T3S configuration error:')
         print('-' * 24)
