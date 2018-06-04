@@ -37,27 +37,32 @@ class T3S(Resource):
         Returns:
             A dictionary that contains the prediction results.
         """
-        # if no features extraction file is given, expect direct JSON data
+        # If no features extraction file is given, expect direct JSON data
         if not config.TF_USE_EXTRACTOR:
             try:
                 parsed_json = json.loads(input)
             except json.decoder.JSONDecodeError:
                 return {
-                    'response': '"%s" is not valid data. Please enter JSON-formatted data to represent your features.' % (input)
+                    'error': '"%s" is not valid data. Please enter JSON-formatted data to represent your features.' % (input)
                 }
             for key, value in parsed_json.items():
                 parsed_json[key] = [value]
-        # else expect a string and extract features with the extracting file
+        # Else expect a string and extract features with the extracting file
         else:
             parsed_json = extractor.extract(input)
             if parsed_json is None:
                 return {
-                    'response': '"%s" is not valid data. Please enter an email in the form: "username@domain".' % (input)
+                    'error': '"%s" is not valid data. Please enter an email in the form: "username@domain".' % (input)
                 }
 
+        # Compute model prediction
         model_input = T3S.preprocess_input_examples_arg_string('examples=['+json.dumps(parsed_json)+']')
-        feature_chance = T3S.run_saved_model_with_feed_dict(config.TF_MODEL_DIR, "serve", "predict", model_input,'./',True)
+        print(json.dumps(parsed_json))
+        print(model_input)
+        feature_chance = T3S.run_saved_model_with_feed_dict(config.TF_MODEL_DIR, "serve", "predict", model_input, './', True)
         json_result = {'feature_chance': np.float64(feature_chance)}
+
+        # Return result
         return json_result
 
 
@@ -287,7 +292,10 @@ def favicon():
 api.add_resource(T3S, '/<string:input>')
 
 if __name__ == '__main__':
+    # Set app configuration
     config.configure_app(app)
+
+    # Check for features extraction file import
     if config.TF_USE_EXTRACTOR:
         try:
             import tf.extractor as extractor
@@ -299,4 +307,5 @@ if __name__ == '__main__':
             )
             sys.exit(1)
 
+    # Start server
     app.run()
