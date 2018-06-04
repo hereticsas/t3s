@@ -5,32 +5,31 @@ The general steps are common to all models, but the specific implementations
 of each depends on your model.
 """
 
-def check_data(data):
+def check_data(input):
     """
-    Checks for the input data validity.
+    Checks for the input validity.
 
     Args:
-        data: String to check.
+        input: String to check.
 
     Returns:
-        True if the data is valid for the model, False otherwise.
+        True if the input is valid for the model, False otherwise.
     """
-    return '@' in data
+    return '@' in input
 
-def compute_features(data):
+def compute_features(input):
     """
-    Computes the TensorFlow model features from the data.
+    Computes the TensorFlow model features from the input.
 
     Args:
-        data: String to compute the features from.
+        input: String to compute the features from.
 
     Returns:
         A dictionary with the model's keys as keys and the computed features as
-        values. The values must be lists, even with only one element (to match
-        TensorFlow conditions).
+        values.
     """
     # compute features values
-    lp, domain = data.split('@')
+    lp, domain = input.split('@')
     lp_length = len(lp)
     lp_num = sum(c.isdigit() for c in lp)
     lp_alpha = sum(c.isalpha() for c in lp)
@@ -38,12 +37,12 @@ def compute_features(data):
 
     # create features dictionary
     features = {
-        'lp_length': [lp_length],
-        'lp_alpha': [lp_alpha],
-        'lp_num': [lp_num],
-        'lp_other': [1],
-        'domain_length': [len(domain)],
-        'domain': [domain],
+        'lp_length': lp_length,
+        'lp_alpha': lp_alpha,
+        'lp_num': lp_num,
+        'lp_other': lp_other,
+        'domain_length': len(domain),
+        'domain': domain,
     }
     # return result
     return features
@@ -54,7 +53,8 @@ def extract(data, debug=False):
     your model.
 
     Args:
-        data: String to compute the features from.
+        data: String to compute the features from (can contain multiple examples,
+            each separated by a ';' character).
         debug: A boolean flag to display or not the computed features.
 
     Returns:
@@ -62,19 +62,32 @@ def extract(data, debug=False):
         Else, returns a dictionary with the model's keys as keys and the computed
         features as values.
     """
-    # check for input validity
-    if not check_data(data):
-        return None
-
-    # compute features
-    features = compute_features(data)
+    # Split examples
+    inputs = data.split(';')
 
     if debug:
-        print('-' * 23)
+        print('=' * 23)
         print('T3S computation result:')
-        print('-' * 23)
-        print('Input:', data)
-        print('Result:', features, '\n')
+        print('=' * 23)
+
+    # Prepare results array
+    examples_features = []
+    # Compute each example
+    for input in inputs:
+        result = None
+
+        # Check for input validity
+        if check_data(input):
+            # Compute features
+            features = compute_features(input)
+
+            if debug:
+                print('Example #%3d:' % len(examples_features))
+                print('-' * 13)
+                print('Input:', input)
+                print('Result:', features, '\n')
+
+        examples_features.append(features)
 
     # return result
-    return features
+    return examples_features

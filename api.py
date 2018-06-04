@@ -22,45 +22,55 @@ api = Api(app)
 
 class T3S(Resource):
 
-    def get(self, input):
+    def get(self, data_input):
         """
-        Processes the given input to predict a result from the TensorFlow model.
+        Processes the given input to predict results from the TensorFlow model
+        for one or multiple examples.
+
+        If the T3S is configured with a features extraction file, the input should
+        contain all examples separated by a ';' character. Each of these substrings
+        must be in the right format for the extract() function defined in the
+        extractor file.
+
+        Otherwise, the input must be a JSON-formatted string representing an array
+        of JSON dictionaries with the features of the model as keys, and the
+        pre-computed features values foreach example.
 
         Args:
-            input: String to process.
-                If the T3S is configured with a features extraction file, it should be a
-                string in the right format for the extract() function defined in this
-                file.
-                Otherwise, it must be a JSON-formatted string with the features of the
-                model as keys, and the pre-computed features values.
+            input: String containing the examples to process.
 
         Returns:
             A dictionary that contains the prediction results.
         """
+        # Split examples
         # If no features extraction file is given, expect direct JSON data
         if not config.TF_USE_EXTRACTOR:
             try:
-                parsed_json = json.loads(input)
+                inputs = json.loads(data_input)
             except json.decoder.JSONDecodeError:
                 return {
-                    'error': '"%s" is not valid data. Please enter JSON-formatted data to represent your features.' % (input)
+                    'error': '"%s" is not valid data. Please enter JSON-formatted data to represent your features.' % (data_input)
                 }
-            for key, value in parsed_json.items():
-                parsed_json[key] = [value]
         # Else expect a string and extract features with the extracting file
         else:
-            parsed_json = extractor.extract(input)
-            if parsed_json is None:
+            inputs = extractor.extract(data_input)
+            if inputs is None:
                 return {
-                    'error': '"%s" is not valid data. Please enter an email in the form: "username@domain".' % (input)
+                    'error': '"%s" is not valid data. Please enter an email in the form: "username@domain".' % (data_input)
                 }
 
-        # Compute model prediction
-        model_input = T3S.preprocess_input_examples_arg_string('examples=['+json.dumps(parsed_json)+']')
-        print(json.dumps(parsed_json))
-        print(model_input)
-        feature_chance = T3S.run_saved_model_with_feed_dict(config.TF_MODEL_DIR, "serve", "predict", model_input, './', True)
-        json_result = {'feature_chance': np.float64(feature_chance)}
+        json_result = {}
+        # Foreach example in the list:
+        for i, parsed_json in enumerate(inputs):
+            for key, value in parsed_json.items():
+                parsed_json[key] = [value]
+
+            # Pass example in TensorFlow formatting
+            model_input = T3S.preprocess_input_examples_arg_string('examples=['+json.dumps(parsed_json)+']')
+            # Comput model prediction
+            feature_chance = T3S.run_saved_model_with_feed_dict(config.TF_MODEL_DIR, "serve", "predict", model_input, './', True)
+            # Add result to list
+            json_result['ex' + str(i) + '-feature_chance'] = np.float64(feature_chance)
 
         # Return result
         return json_result
@@ -89,12 +99,16 @@ class T3S(Resource):
             intermediate Tensor values and runtime GraphDefs while running the
             SavedModel.
 
+      Returns:
+        An strings with the computed prediction for the input.
+
       Raises:
         ValueError: When any of the input tensor keys is not valid.
         RuntimeError: An error when output file already exists and overwrite is not
             enabled.
       """
       result_string = ''
+
       # Get a list of output tensor names.
       meta_graph_def = saved_model_utils.get_meta_graph_def(saved_model_dir, tag_set)
 
@@ -249,7 +263,14 @@ class T3S(Resource):
 
     @staticmethod
     def _create_example_string(example_dict):
-      """Create a serialized tf.example from feature dictionary."""
+      """Creates a serialized tf.example from feature dictionary.
+
+      Args:
+        example_dict: The dictionary that contains the example features.
+
+      Returns:
+        A byte-string to represent the serialized example data.
+      """
       example = example_pb2.Example()
       for feature_name, feature_list in example_dict.items():
         if not isinstance(feature_list, list):
@@ -264,9 +285,7 @@ class T3S(Resource):
           example.features.feature[feature_name].bytes_list.value.extend(
               feature_list)
         elif isinstance(feature_list[0], int):
-          for i in range(len(feature_list)):
-            feature_list[i] = float(feature_list[i])
-          example.features.feature[feature_name].float_list.value.extend(
+          example.features.feature[feature_name].int64_list.value.extend(
               feature_list)
         elif isinstance(feature_list[0], bytes):
           example.features.feature[feature_name].bytes_list.value.extend(
@@ -289,7 +308,7 @@ class T3S(Resource):
 def favicon():
     return ''
 
-api.add_resource(T3S, '/<string:input>')
+api.add_resource(T3S, '/<string:data_input>')
 
 if __name__ == '__main__':
     # Set app configuration

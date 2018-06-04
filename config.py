@@ -49,5 +49,5 @@ def configure_app(app):
 
 # TENSORFLOW CONFIGURATION
 # ========================
-TF_MODEL_DIR = '/tmp/email_predictor_model/1528091811/'
+TF_MODEL_DIR = '/tmp/email_predictor_model/1528116978/'
 TF_USE_EXTRACTOR = True
