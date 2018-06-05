@@ -13,6 +13,7 @@ from tensorflow.contrib.saved_model.python.saved_model import signature_def_util
 from tensorflow.python.client import session
 from tensorflow.python.framework import ops as ops_lib
 from tensorflow.python.saved_model import loader
+from tensorflow.python.debug.wrappers import local_cli_wrapper
 
 import config
 

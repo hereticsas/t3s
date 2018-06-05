@@ -2,14 +2,18 @@
 ## Overview
 The **T3S** is an open-source project to make the development of **Flask REST APIs using a TensorFlow model** easier. The goal is to quickly setup an API to which you pass input data in the URL, that computes predictions using the TensorFlow model and outputs the results.
 
+The T3S is programmed in Python 3.
+
 With this API, you can pass one or multiple examples to your model at once.
 
 It was originally conceived for email analysis, this is why most examples refer to this type of data.
 
 ### Configuring the server
-First make sure you have a model saved somewhere in a `${TF_MODEL_DIR}` directory. To learn how to prepare and export a model, you can check out the [TensorFlow reference ‘Wide and Deep’ model tutorial](https://www.tensorflow.org/tutorials/wide_and_deep).
+First make sure you have a model saved somewhere in a `${TF_MODEL_DIR}` directory. To learn how to prepare and export a model, you can check out the [TensorFlow reference 'Wide and Deep' model tutorial](https://www.tensorflow.org/tutorials/wide_and_deep).
 
-Then, edit the `config.py` file to suit your needs:
+Then to install dependencies pass `-r requirements.txt` to pip (i.e. run `pip3 install --user -r requirements.txt`).
+
+Finally, edit the `config.py` file to suit your needs:
 1. set the `${SERVER_NAME}` to the address and port of your API in the form: `{@server:port}` (e.g. `127.0.0.1:5000`)
 2. choose your server configuration: `default`, `dev`, `testing` or `production` and
 set it in the `configure_app()` function
@@ -49,4 +53,6 @@ or
 
 `http://127.0.0.1:5000/example@ex.com`
 
-depending on your configuration file: this page will print out the prediction results of your model for each given example.
+depending on your configuration file: this page will print out the prediction results of your model for each given example. The output is a JSON dictionary that either shows the prediction foreach example, or contains a single 'error' key with a message explaining the issue.
+
+*Note: the T3S is not meant to do pretty-formatting: results are simply outputted in the page without any styling.*
