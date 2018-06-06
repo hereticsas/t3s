@@ -61,12 +61,18 @@ depending on your configuration file: this page will print out the prediction re
 Despite our best efforts, it is complex to make an API adapted to any type of TensorFlow model. Datatypes processing, in particular, could probably be improved. For now, inputs are converted based on their Python variable type but there is no check to insure they match the types request by your model.
 
 ### Development History
-v1.0: initial version â€“ Spring 2018
-v1.1: multiple changes â€“ June 2018:
-- added configuration and project setup files
-- standardized data types
-- added in-app Python features extraction
-- wrote the first version of the documentation
+
+- v1.0: initial version – Spring 2018
+
+- v1.1: multiple changes – June 2018:
+
+    - added configuration and project setup files
+    
+    - standardized data types
+    
+    - added in-app Python features extraction
+    
+    - wrote the first version of the documentation
 
 ### A step-by-step setup with the 'Wide and Deep' model
 
@@ -168,4 +174,4 @@ You are now in custom mode and, for instance, you can access the address:
 
 from which features will be computed and used to make predictions with an email analysis model.
 
-<span style="color:red;">Warning:</span> be careful, when in custom mode, raw input in the JSON format will be considered invalid (unless your `check_data()` implementation handles it).
+**Warning:** be careful, when in custom mode, raw input in the JSON format will be considered invalid (unless your `check_data()` implementation handles it).
