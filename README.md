@@ -62,16 +62,16 @@ Despite our best efforts, it is complex to make an API adapted to any type of Te
 
 ### Development History
 
-- v1.0: initial version – Spring 2018
+- v1.0: initial version - Spring 2018
 
-- v1.1: multiple changes – June 2018:
+- v1.1: multiple changes - June 2018:
 
     - added configuration and project setup files
-    
+
     - standardized data types
-    
+
     - added in-app Python features extraction
-    
+
     - wrote the first version of the documentation
 
 ### A step-by-step setup with the 'Wide and Deep' model
