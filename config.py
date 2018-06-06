@@ -7,10 +7,12 @@ Edit it to suit your needs:
     2. choose your server configuration: `default`, `dev`, `testing` or
     `production` and set it in the `configure_app()` function
     3. configure your TensorFlow model by setting the `${TF_MODEL_DIR}`
-    directory and, if necessary, specifying you have a features extraction file
+    directory
+    4. specify your features extraction mode
 """
 
 import os
+import importlib
 
 # FLASK SERVER CONFIGURATION
 # ==========================
@@ -19,7 +21,7 @@ class BaseConfig(object):
     TESTING = False
 
     # Base info
-    SERVER_NAME = '127.0.0.1:4000'  # in the form: '@server:port'
+    SERVER_NAME = '127.0.0.1:5000'  # in the form: '@server:port'
 
 class DevelopmentConfig(BaseConfig):
     DEBUG = True
@@ -49,5 +51,5 @@ def configure_app(app):
 
 # TENSORFLOW CONFIGURATION
 # ========================
-TF_MODEL_DIR = '/tmp/email_predictor_model/1528116978/'
-TF_USE_EXTRACTOR = True
+TF_MODEL_DIR = '/tmp/wide_deep_saved_model/1528029716/'
+TF_EXTRACTOR = None
