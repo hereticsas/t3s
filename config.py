@@ -51,5 +51,5 @@ def configure_app(app):
 
 # TENSORFLOW CONFIGURATION
 # ========================
-TF_MODEL_DIR = '/tmp/wide_deep_saved_model/1528029716/'
+TF_MODEL_DIR = ''
 TF_EXTRACTOR = None

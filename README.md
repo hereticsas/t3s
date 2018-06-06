@@ -6,7 +6,7 @@ With this API, you can pass one or multiple examples to your model at once. It w
 
 Although it was originally designed for email analysis by the HERETIC SAS company, the aim is to make T3S as standard as possible. In the end, it would be for everyone who is interested in linking a TensorFlow model to a web API and, hopefully, those willing to contribute to its improvement!
 
-The T3S is programmed in Python 3.
+The T3S is programmed in Python 3 and is under Apache 2.0 License. It is mainly based on the code in [the TensorFlow's `saved_model_cli.py` tool](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/tools/saved_model_cli.py).
 
 ### Configuring the server
 First make sure you have a model saved somewhere in a `${TF_MODEL_DIR}` directory. To learn how to prepare and export a model, you can check out the [TensorFlow reference 'Wide and Deep' model tutorial](https://www.tensorflow.org/tutorials/wide_and_deep).
