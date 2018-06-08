@@ -51,7 +51,6 @@ class T3S(Resource):
         # Else expect a string and extract features with the extracting file
         else:
             inputs = config.TF_EXTRACTOR.extract(data_input)
-            print(">>>>", inputs)
             if None in inputs:
                 return {
                     'error': '"%s" is not valid data. ' % (data_input) + \
