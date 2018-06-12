@@ -83,7 +83,7 @@ Despite our best efforts, it is complex to make an API adapted to any type of Te
 
 To give a concrete example of a T3S complete set up, we will consider the tutorial 'Wide and Deep' (W&D) TensorFlow model and configure a T3S in raw mode to compute predictions with this model.
 
-##### Model export
+#### Model export
 
 First, we need to export the W&D model so we can use it in our API. To do so, as explained [in the TensorFlow tutorial](https://www.tensorflow.org/tutorials/wide_and_deep), you need to:
 
@@ -101,7 +101,7 @@ First, we need to export the W&D model so we can use it in our API. To do so, as
 
 You should now have a model saved in the export folder as a file: `${TF_MODEL_DIR}/${TIMESTAMP}/saved_model.pb` (where `${TIMESTAMP}` is automatically specified by the system, e.g. `1524249124`).
 
-##### T3S configuration
+#### T3S configuration
 
 Now, we can configure the T3S to use this model. After downloading the file, you should edit the `config.py` file:
 
@@ -114,7 +114,7 @@ Now, we can configure the T3S to use this model. After downloading the file, you
 - make sure you are in raw mode, i.e. your `extractors` field does not contain a key named like your model (e.g. `1524249124`)
 *(see below for custom extractor configuration)*
 
-##### T3S running
+#### T3S running
 
 Finally, run: `python api.py`.
 
@@ -129,7 +129,9 @@ You should get a JSON response containing two lines with the predicted features 
 }
 ```
 
-##### Bonus: Custom mode configuration
+You can also visit the address `127.0.0.1:5000` to have a simple interface show you the list of all your available models. However, for now, you cannot pass input data directly through these simple HTML pages.
+
+#### Bonus: Custom mode configuration
 
 To use a custom extractor, you must write a class that inherits from the `T3SExtractor` abstract class. You need to specify `check_data()` and `compute_features()` function that match your model. For instance, here is a valid custom extractor to work on email addresses:
 
