@@ -15,17 +15,20 @@ Then to install dependencies pass `-r requirements.txt` to pip (i.e. run `pip3 i
 
 Finally, edit the `config.py` file to suit your needs:
 1. set the `${SERVER_NAME}` to the address and port of your API in the form: `{@server:port}` (e.g. `127.0.0.1:5000`)
+*Note: if you want, you can also set your site title here!*
 2. choose your server configuration: `default`, `dev`, `testing` or `production` and
 set it in the `configure_app()` function
-3. configure your TensorFlow model by setting the `${TF_MODEL_DIR}` directory
-4. specify your feature computing mode:
+3. configure your TensorFlow models by setting the `TF_MODELS` Python dictionary:
+    - set the `dir` to the `${TF_MODEL_DIR}` directory containing your different models
+    in separate subfolders
+    - specify your feature computing mode:
 
 The T3S is primarily designed only for model prediction and not feature computing, meaning you can pre-process your data and extract your feature values in whatever you wish, then send them to the API as a JSON-formatted string.
-To use this raw mode, you need to set the `TF_EXTRACTOR` variable to `None`.
+This raw mode is used by default for the models.
 
-However, if you would rather keep it all in the same place, you can also provide a custom features extractor. This extractor should be a class that inherits from the `T3T3SExtractor` abstract class and holds specific implementations of the `check_data()` and `compute_features()` functions.
+However, if you would rather keep it all in the same place, you can also provide a custom features extractor. This extractor should be a class that inherits from the `T3SExtractor` abstract class and holds specific implementations of the `check_data()` and `compute_features()` functions.
 *Note: the `extract()` function should not be touched since it runs the process independently from your model.*
-To use this personalized mode, you need to set the `TF_EXTRACTOR` variable to your custom extractor class.
+To use this personalized mode, you need to add a key in the `extractors` field of the `TF_MODELS` variable set to your custom extractor class.
 
 ### Running the server
 To start the server, simply run: `python api.py`.
@@ -36,7 +39,7 @@ You can now ask your model to predict outputs for given data by passing it in th
 in the JSON format or as a string.
 
 ### Processing some data
-Broadly speaking, you will access an address in the form: `${SERVER_NAME}/data_input`.
+Broadly speaking, you will access an address in the form: `${SERVER_NAME}/model/data_input`.
 
 For now, `data_input` can be given in two forms:
 
@@ -45,13 +48,13 @@ For now, `data_input` can be given in two forms:
 - a string (with the examples separated by the ``;`` character) to extract the features from thanks to your **specific extracting file**
 (e.g. `example@ex.com;example2@ex2.com`)
 
-For example, you can access the page:
+For example, you may access the page:
 
-`http://127.0.0.1:5000/[{"lp_length": 7, "domain": "ex.com"}]`
+`http://127.0.0.1:5000/model1/[{"lp_length": 7, "domain": "ex.com"}]`
 
 or
 
-`http://127.0.0.1:5000/example@ex.com`
+`http://127.0.0.1:5000/model1/example@ex.com`
 
 depending on your configuration file: this page will print out the prediction results of your model for each given example. The output is a JSON dictionary that either shows the prediction foreach example, or contains a single 'error' key with a message explaining the issue.
 
@@ -73,6 +76,8 @@ Despite our best efforts, it is complex to make an API adapted to any type of Te
     - added in-app Python features extraction
 
     - wrote the first version of the documentation
+
+- v1.2: added multiple models routing - June 2018
 
 ### A step-by-step setup with the 'Wide and Deep' model
 
@@ -104,9 +109,9 @@ Now, we can configure the T3S to use this model. After downloading the file, you
 
 - likewise, we will keep the default `dev` configuration
 
-- set the `${TF_MODEL_DIR}` variable to the folder where you saved your TensorFlow model (with the `${TIMESTAMP}` part, e.g. `/tmp/wide_deep_model/1524249124/`)
+- set the `TF_MODELS` `dir` field to the folder where you saved your TensorFlow model (without the `${TIMESTAMP}` part, e.g. `/tmp/wide_deep_model/`)
 
-- make sure you are in raw mode, i.e. `TF_EXTRACTOR = None`
+- make sure you are in raw mode, i.e. your `extractors` field does not contain a key named like your model (e.g. `1524249124`)
 *(see below for custom extractor configuration)*
 
 ##### T3S running
@@ -114,7 +119,7 @@ Now, we can configure the T3S to use this model. After downloading the file, you
 Finally, run: `python api.py`.
 
 To test that your API is working, you can check out the following address:
-`127.0.0.1:5000/[{"age":46.0, "education_num":10.0, "capital_gain":7688.0, "capital_loss":0.0, "hours_per_week":38.0}, {"age":24.0, "education_num":13.0, "capital_gain":0.0, "capital_loss":0.0, "hours_per_week":50.0}]`
+`127.0.0.1:5000/${TIMESTAMP}/[{"age":46.0, "education_num":10.0, "capital_gain":7688.0, "capital_loss":0.0, "hours_per_week":38.0}, {"age":24.0, "education_num":13.0, "capital_gain":0.0, "capital_loss":0.0, "hours_per_week":50.0}]`
 
 You should get a JSON response containing two lines with the predicted features for these two examples, for example:
 ```
@@ -164,13 +169,20 @@ class CustomExtractor(T3SExtractor):
 
 *Note 2: the `error_formatting()` function is not essential but if implemented, it will provide a more precise error message to the user if the input is not formatted right.*
 
-Then you have to set this class as value for the configuration `TF_EXTRACTOR` variable. So, if your class is in the `extractor.py` file in your T3S folder, you should edit `config.py` and set:
+Then you have to set this class as value for the `TF_MODELS` `extractors` field. So, if your class is in the `extractor.py` file in your T3S folder, you should edit `config.py` and set:
 
-`TF_EXTRACTOR = __import__("custom").CustomExtractor()`
+```
+TF_MODELS = {
+    'dir': '/tmp/wide_deep_model/',
+    'extractors': {
+        '1524249124': __import__("custom").CustomExtractor()
+    }
+}
+```
 
 You are now in custom mode and, for instance, you can access the address:
 
-`127.0.0.1:5000/example@ex.com;example2@ex2.com`
+`127.0.0.1:5000/${TIMESTAMP}/example@ex.com;example2@ex2.com`
 
 from which features will be computed and used to make predictions with an email analysis model.
 

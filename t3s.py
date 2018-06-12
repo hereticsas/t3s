@@ -17,7 +17,7 @@ import config
 
 class T3S(Resource):
 
-    def get(self, data_input):
+    def get(self, model, data_input):
         """
         Processes the given input to predict results from the TensorFlow model
         for one or multiple examples.
@@ -38,7 +38,7 @@ class T3S(Resource):
             A dictionary that contains the prediction results.
         """
         # If no features extraction file is given, expect direct JSON data
-        if config.TF_EXTRACTOR is None:
+        if model not in config.TF_MODELS['extractors']:
             try:
                 inputs = json.loads(data_input)
             except json.decoder.JSONDecodeError:
@@ -50,18 +50,19 @@ class T3S(Resource):
                 inputs = [inputs]
         # Else expect a string and extract features with the extracting file
         else:
-            inputs = config.TF_EXTRACTOR.extract(data_input)
+            inputs = config.TF_MODELS['extractors'][model].extract(data_input)
             if None in inputs:
                 return {
                     'error': '"%s" is not valid data. ' % (data_input) + \
-                        config.TF_EXTRACTOR.error_formatting()
+                        config.TF_MODELS['extractors'][model].error_formatting()
                 }
 
         # Cast and process examples
         json_result = {}
         for i, parsed_json in enumerate(inputs):
             model_input = T3S.preprocess_input_examples_arg_string('examples=['+json.dumps(parsed_json)+']')
-            feature_chance = T3S.run_saved_model_with_feed_dict(config.TF_MODEL_DIR, "serve", "predict", model_input, './', True)
+            model_dir = config.TF_MODELS['dir'] + model + '/'
+            feature_chance = T3S.run_saved_model_with_feed_dict(model_dir, "serve", "predict", model_input, './', True)
             json_result['ex' + str(i) + '-res'] = np.float64(feature_chance)
 
         return json_result

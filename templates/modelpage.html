@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+
+{% block header %}
+  <h3>{% block title %}Model: {{ model }}{% endblock %}</h3>
+{% endblock %}
+
+{% block content %}
+Pass input data in the URL to get results.
+
+<div>
+    <a href="http://{{ SERVER_NAME }}">Return to models list</a>
+</div>
+{% endblock %}

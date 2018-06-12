@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+
+{% block header %}
+    {% block title %}This Demo Server implements a simple T3S example.{% endblock %}
+{% endblock %}
+
+{% block content %}
+<h3>Available models:</h3>
+<ul>
+    {% for m in models_list %}
+    <li><a href="http://{{ SERVER_NAME }}/{{ m }}">{{ m }}</a></li>
+    {% endfor %}
+</ul>
+{% endblock %}

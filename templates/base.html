@@ -1,0 +1,11 @@
+<!doctype html>
+<title>T3S - {{ SITE_TITLE }}</title>
+<nav>
+  <h1>T3S - {{ SITE_TITLE }}</h1>
+</nav>
+<section class="content">
+  <header>
+    {% block header %}{% endblock %}
+  </header>
+  {% block content %}{% endblock %}
+</section>

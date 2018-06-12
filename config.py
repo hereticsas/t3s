@@ -6,9 +6,11 @@ Edit it to suit your needs:
     `{@server:port}` (e.g. `127.0.0.1:5000`)
     2. choose your server configuration: `default`, `dev`, `testing` or
     `production` and set it in the `configure_app()` function
-    3. configure your TensorFlow model by setting the `${TF_MODEL_DIR}`
-    directory
-    4. specify your features extraction mode
+    3. configure your TensorFlow models by setting the `${TF_MODELS}` dict:
+        - 'dir' is the global directory containing all your models in separate
+        subfolders
+        - 'extractors' is a Python dict that contains specific features extractor
+        for your models if necessary (see the Readme for more information)
 """
 
 import os
@@ -22,6 +24,7 @@ class BaseConfig(object):
 
     # Base info
     SERVER_NAME = '127.0.0.1:5000'  # in the form: '@server:port'
+    SITE_TITLE = 'Demo Server'
 
 class DevelopmentConfig(BaseConfig):
     DEBUG = True
@@ -51,5 +54,7 @@ def configure_app(app):
 
 # TENSORFLOW CONFIGURATION
 # ========================
-TF_MODEL_DIR = ''
-TF_EXTRACTOR = None
+TF_MODELS = {
+    'dir': '',
+    'extractors': {}
+}
