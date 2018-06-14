@@ -177,7 +177,7 @@ Then you have to set this class as value for the `TF_MODELS` `extractors` field.
 TF_MODELS = {
     'dir': '/tmp/wide_deep_model/',
     'extractors': {
-        '1524249124': __import__("custom").CustomExtractor()
+        '1524249124': __import__("extractor").CustomExtractor()
     }
 }
 ```
