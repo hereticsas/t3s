@@ -31,7 +31,6 @@ def index():
     return render_template(
         'index.html',
         SITE_TITLE=app.config['SITE_TITLE'],
-        SERVER_NAME=app.config['SERVER_NAME'],
         models_list=models_list)
 
 @app.route('/<model>')
@@ -44,7 +43,6 @@ def modelpage(model=None):
     return render_template(
         'modelpage.html',
         SITE_TITLE=app.config['SITE_TITLE'],
-        SERVER_NAME=app.config['SERVER_NAME'],
         model=model)
 
 api.add_resource(T3S, '/<model>/<string:data_input>')
@@ -55,4 +53,4 @@ if __name__ == '__main__':
     config.configure_app(app)
 
     # Start server
-    app.run()
+    app.run(host='0.0.0.0')

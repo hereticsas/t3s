@@ -8,7 +8,7 @@
 <h3>Available models:</h3>
 <ul>
     {% for m in models_list %}
-    <li><a href="http://{{ SERVER_NAME }}/{{ m }}">{{ m }}</a></li>
+    <li><a href="{{ url_for('modelpage', model=m) }}">{{ m }}</a></li>
     {% endfor %}
 </ul>
 {% endblock %}
